@@ -1,0 +1,6 @@
+{
+  "name": "Graph Analysis Tool",
+  "description": "An interactive tool to upload and analyze graph data from .gdcom, .ged, or .txt files. Visualize the network, and calculate key metrics like the number of nodes, edges, connected components, and graph diameter.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}

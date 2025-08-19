@@ -136,7 +136,7 @@ const App: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col font-sans bg-gray-900 text-gray-200">
+    <div className="h-screen flex flex-col font-sans bg-gray-900 text-gray-200">
       <header className="bg-gray-800/50 backdrop-blur-sm shadow-lg p-4 z-10 border-b border-gray-700">
         <div className="container mx-auto flex items-center gap-4">
           <GraphIcon className="w-8 h-8 text-cyan-400" />
@@ -146,8 +146,8 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      <main className="flex-grow flex flex-col md:flex-row container mx-auto p-4 gap-4">
-        <div className="w-full md:w-1/3 lg:w-1/4 flex-shrink-0 md:h-[95vh] max-h-[50vh] md:max-h-none">
+      <main className="flex-grow flex flex-col md:flex-row container mx-auto p-4 gap-4 min-h-0">
+        <div className="w-full md:w-1/3 lg:w-1/4 flex-shrink-0 md:h-full max-h-[50%] md:max-h-none">
           <ControlPanel
             onFileSelect={handleFileSelect}
             onAnalyze={handleAnalyze}
@@ -163,7 +163,7 @@ const App: React.FC = () => {
           />
         </div>
         
-        <div className="flex-grow min-h-0 bg-gray-800 rounded-lg shadow-2xl overflow-hidden relative border border-gray-700 md:h-[95vh]">
+        <div className="flex-grow min-h-0 bg-gray-800 rounded-lg shadow-2xl overflow-hidden relative border border-gray-700 md:h-full">
           {graphData ? (
             <>
               <GraphVisualizer

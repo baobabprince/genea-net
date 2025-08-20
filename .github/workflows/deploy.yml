@@ -30,7 +30,8 @@ jobs:
 
       # Step 3: Installs the project dependencies. This includes Tailwind CSS and any other dev dependencies.
       - name: Install dependencies
-        run: npm ci
+        # This command is more robust as it will also create package-lock.json if it doesn't exist.
+        run: npm install
 
       # Step 4: Runs the build command. This is a crucial step that
       # compiles your code and processes Tailwind CSS into a final, optimized

@@ -5,6 +5,7 @@ import ControlPanel from './components/ControlPanel';
 import GraphVisualizer from './components/GraphVisualizer';
 import GraphLegend from './components/GraphLegend';
 import { UploadIcon, GraphIcon } from './components/ui/Icons';
+import graphWorker from './services/graphWorker.ts?worker';
 
 const App: React.FC = () => {
   const [graphData, setGraphData] = useState<GraphData | null>(null);
@@ -20,57 +21,32 @@ const App: React.FC = () => {
   const workerRef = useRef<Worker | null>(null);
   
   useEffect(() => {
-    let worker: Worker | null = null;
-    let objectUrl: string | null = null;
+    // Create the worker using Vite's recommended syntax
+    const worker = new graphWorker();
+    workerRef.current = worker;
 
-    // Create worker from a blob to bypass cross-origin restrictions in sandboxed environments.
-    const createWorker = async () => {
-      try {
-        const response = await fetch('./services/graphWorker.ts');
-        if (!response.ok) {
-          throw new Error(`Failed to fetch worker script: ${response.statusText}`);
-        }
-        const workerScript = await response.text();
-        const blob = new Blob([workerScript], { type: 'application/javascript' });
-        objectUrl = URL.createObjectURL(blob);
-        
-        worker = new Worker(objectUrl, { type: 'module' });
-        workerRef.current = worker;
-
-        const handleMessage = (event: MessageEvent) => {
-          const { type, result, error: workerError } = event.data;
-          setIsLoading(false);
-          if (type === 'success') {
-            setAnalysisResult(result);
-            setStatusMessage('Analysis complete. Results are now displayed.');
-          } else if (type === 'error') {
-            const errorMessage = workerError || 'An unexpected error occurred during analysis.';
-            setError(errorMessage);
-            setAnalysisResult(null);
-            setStatusMessage(`Analysis failed: ${errorMessage}`);
-          }
-        };
-
-        worker.addEventListener('message', handleMessage);
-
-      } catch (err) {
-        console.error("Failed to initialize worker:", err);
-        const errorMessage = err instanceof Error ? err.message : "An unknown error occurred.";
-        setError(`Failed to initialize analysis engine: ${errorMessage}`);
-        setStatusMessage("Error: Could not start the analysis engine.");
+    const handleMessage = (event: MessageEvent) => {
+      const { type, result, error: workerError } = event.data;
+      setIsLoading(false);
+      if (type === 'success') {
+        setAnalysisResult(result);
+        setStatusMessage('Analysis complete. Results are now displayed.');
+      } else if (type === 'error') {
+        const errorMessage = workerError || 'An unexpected error occurred during analysis.';
+        setError(errorMessage);
+        setAnalysisResult(null);
+        setStatusMessage(`Analysis failed: ${errorMessage}`);
       }
     };
 
-    createWorker();
+    worker.addEventListener('message', handleMessage);
 
+    // Clean up the worker on component unmount
     return () => {
       worker?.terminate();
-      if (objectUrl) {
-        URL.revokeObjectURL(objectUrl);
-      }
+      workerRef.current = null;
     };
   }, []);
-
 
   const clearAnalysis = () => {
     setAnalysisResult(null);
@@ -110,7 +86,7 @@ const App: React.FC = () => {
         if (isGedcomFile) {
             data = parseGedcom(content);
         } else {
-            data = parseEdgeList(content);
+          data = parseEdgeList(content);
         }
 
         if (data.nodes.length === 0) {
@@ -127,7 +103,7 @@ const App: React.FC = () => {
     reader.onerror = () => {
       setError('Failed to read the file.');
       setGraphData(null);
-       setStatusMessage(`Error reading file.`);
+        setStatusMessage(`Error reading file.`);
     };
     reader.readAsText(file);
   }, []);

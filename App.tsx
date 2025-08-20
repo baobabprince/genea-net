@@ -20,29 +20,54 @@ const App: React.FC = () => {
   const workerRef = useRef<Worker | null>(null);
   
   useEffect(() => {
-    workerRef.current = new Worker(new URL('./services/graphWorker.ts', import.meta.url), {
-      type: 'module'
-    });
+    let worker: Worker | null = null;
+    let objectUrl: string | null = null;
 
-    const handleMessage = (event: MessageEvent) => {
-      const { type, result, error: workerError } = event.data;
-      setIsLoading(false);
-      if (type === 'success') {
-        setAnalysisResult(result);
-        setStatusMessage('Analysis complete. Results are now displayed.');
-      } else if (type === 'error') {
-        const errorMessage = workerError || 'An unexpected error occurred during analysis.';
-        setError(errorMessage);
-        setAnalysisResult(null);
-        setStatusMessage(`Analysis failed: ${errorMessage}`);
+    // Create worker from a blob to bypass cross-origin restrictions in sandboxed environments.
+    const createWorker = async () => {
+      try {
+        const response = await fetch('./services/graphWorker.ts');
+        if (!response.ok) {
+          throw new Error(`Failed to fetch worker script: ${response.statusText}`);
+        }
+        const workerScript = await response.text();
+        const blob = new Blob([workerScript], { type: 'application/javascript' });
+        objectUrl = URL.createObjectURL(blob);
+        
+        worker = new Worker(objectUrl, { type: 'module' });
+        workerRef.current = worker;
+
+        const handleMessage = (event: MessageEvent) => {
+          const { type, result, error: workerError } = event.data;
+          setIsLoading(false);
+          if (type === 'success') {
+            setAnalysisResult(result);
+            setStatusMessage('Analysis complete. Results are now displayed.');
+          } else if (type === 'error') {
+            const errorMessage = workerError || 'An unexpected error occurred during analysis.';
+            setError(errorMessage);
+            setAnalysisResult(null);
+            setStatusMessage(`Analysis failed: ${errorMessage}`);
+          }
+        };
+
+        worker.addEventListener('message', handleMessage);
+
+      } catch (err) {
+        console.error("Failed to initialize worker:", err);
+        const errorMessage = err instanceof Error ? err.message : "An unknown error occurred.";
+        setError(`Failed to initialize analysis engine: ${errorMessage}`);
+        setStatusMessage("Error: Could not start the analysis engine.");
       }
     };
 
-    workerRef.current.addEventListener('message', handleMessage);
+    createWorker();
 
     return () => {
-      workerRef.current?.removeEventListener('message', handleMessage);
-      workerRef.current?.terminate();
+      worker?.terminate();
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
     };
   }, []);
 

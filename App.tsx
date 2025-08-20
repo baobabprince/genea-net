@@ -1,7 +1,6 @@
-
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { GraphData, AnalysisResult, NodeObject } from './types';
-import { parseEdgeList, parseGedcom, analyzeGraph } from './services/graphService';
+import { parseEdgeList, parseGedcom } from './services/graphService';
 import ControlPanel from './components/ControlPanel';
 import GraphVisualizer from './components/GraphVisualizer';
 import GraphLegend from './components/GraphLegend';
@@ -13,10 +12,39 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [isGedcom, setIsGedcom] = useState<boolean>(false);
+  const [statusMessage, setStatusMessage] = useState<string>('');
 
   const [selectedNode, setSelectedNode] = useState<NodeObject | null>(null);
   const [hoveredNode, setHoveredNode] = useState<NodeObject | null>(null);
   const fgRef = useRef<any>(null);
+  const workerRef = useRef<Worker | null>(null);
+  
+  useEffect(() => {
+    workerRef.current = new Worker(new URL('./services/graphWorker.ts', import.meta.url), {
+      type: 'module'
+    });
+
+    const handleMessage = (event: MessageEvent) => {
+      const { type, result, error: workerError } = event.data;
+      setIsLoading(false);
+      if (type === 'success') {
+        setAnalysisResult(result);
+        setStatusMessage('Analysis complete. Results are now displayed.');
+      } else if (type === 'error') {
+        const errorMessage = workerError || 'An unexpected error occurred during analysis.';
+        setError(errorMessage);
+        setAnalysisResult(null);
+        setStatusMessage(`Analysis failed: ${errorMessage}`);
+      }
+    };
+
+    workerRef.current.addEventListener('message', handleMessage);
+
+    return () => {
+      workerRef.current?.removeEventListener('message', handleMessage);
+      workerRef.current?.terminate();
+    };
+  }, []);
 
 
   const clearAnalysis = () => {
@@ -64,19 +92,22 @@ const App: React.FC = () => {
             throw new Error("No nodes found in the file. Ensure the file is not empty and is formatted correctly (e.g., 'node1 node2' for .txt or valid GEDCOM for .ged).");
         }
         setGraphData(data);
+        setStatusMessage(`Successfully loaded graph data from ${file.name}.`);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to parse file.');
         setGraphData(null);
+        setStatusMessage(err instanceof Error ? `Error parsing file: ${err.message}` : `Error parsing file.`);
       }
     };
     reader.onerror = () => {
       setError('Failed to read the file.');
       setGraphData(null);
+       setStatusMessage(`Error reading file.`);
     };
     reader.readAsText(file);
   }, []);
   
-  const handleSampleSelect = useCallback((content: string, type: 'ged' | 'txt') => {
+  const handleSampleSelect = useCallback((content: string, type: 'ged' | 'txt', name: string) => {
     setError(null);
     resetGraphState();
 
@@ -99,28 +130,21 @@ const App: React.FC = () => {
             throw new Error("No nodes found in the sample data.");
         }
         setGraphData(data);
+        setStatusMessage(`Loaded sample dataset: ${name}.`);
     } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to parse sample data.');
         setGraphData(null);
+        setStatusMessage(err instanceof Error ? `Error loading sample: ${err.message}` : 'Error loading sample data.');
     }
   }, []);
 
-  const handleAnalyze = useCallback(async () => {
-    if (!graphData) return;
+  const handleAnalyze = useCallback(() => {
+    if (!graphData || !workerRef.current) return;
     clearAnalysis();
     setIsLoading(true);
     setError(null);
-    
-    await new Promise(resolve => setTimeout(resolve, 50));
-
-    try {
-      const result = analyzeGraph(graphData);
-      setAnalysisResult(result);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred during analysis.');
-    } finally {
-      setIsLoading(false);
-    }
+    setStatusMessage('Analysis started. This may take a moment for large graphs.');
+    workerRef.current.postMessage(graphData);
   }, [graphData]);
   
   const handleNodeClick = useCallback((node: NodeObject) => {
@@ -136,7 +160,12 @@ const App: React.FC = () => {
   }, []);
 
   return (
-    <div className="h-screen flex flex-col font-sans bg-gray-900 text-gray-200">
+    <div className="h-screen flex flex-col font-sans bg-gray-900 text-gray-200" aria-busy={isLoading}>
+      {/* Visually hidden container for screen reader announcements */}
+      <div role="status" className="sr-only">
+        {statusMessage}
+      </div>
+
       <header className="bg-gray-800 bg-opacity-50 backdrop-blur-sm shadow-lg p-4 z-10 border-b border-gray-700">
         <div className="container mx-auto flex items-center gap-4">
           <GraphIcon className="w-8 h-8 text-cyan-400" />

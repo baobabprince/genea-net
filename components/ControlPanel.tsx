@@ -10,7 +10,7 @@ import { InfoIcon, AlertTriangleIcon, UploadIcon, BarChart2Icon, XCircleIcon } f
 interface ControlPanelProps {
   onFileSelect: (file: File) => void;
   onAnalyze: () => void;
-  onSampleSelect: (content: string, type: 'ged' | 'txt') => void;
+  onSampleSelect: (content: string, type: 'ged' | 'txt', name: string) => void;
   analysisResult: AnalysisResult | null;
   isLoading: boolean;
   error: string | null;

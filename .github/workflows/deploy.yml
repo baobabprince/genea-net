@@ -15,7 +15,7 @@ jobs:
   build-and-deploy:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
-    
+
     # NEW: Add permissions to allow the workflow to write to the repository.
     # The 'peaceiris/actions-gh-pages' action requires this to push the built
     # files to the gh-pages branch.

@@ -50,7 +50,7 @@ const ListStatItem: React.FC<{ label: string; items: NodeObject[]; emptyText?: s
         {items.length > 0 ? (
             <ul className="mt-1.5 pl-1 space-y-1">
                 {items.map(item => (
-                    <li key={item.id} className="text-sm text-gray-300 bg-gray-700/50 px-2 py-1 rounded truncate" title={item.name || item.id}>
+                    <li key={item.id} className="text-sm text-gray-300 bg-gray-700 bg-opacity-50 px-2 py-1 rounded truncate" title={item.name || item.id}>
                        {item.name || item.id}
                     </li>
                 ))}
@@ -76,7 +76,7 @@ const RankedStatItem: React.FC<{ label: string; items: CentralityResult[]; empty
         {items && items.length > 0 && items.some(i => i.value > 0) ? (
              <ol className="mt-1.5 pl-1 space-y-1">
                 {items.map((item, index) => item.value > 0 && (
-                    <li key={item.node.id} className="text-sm text-gray-300 bg-gray-700/50 px-2 py-1 rounded flex justify-between items-center" title={item.node.name || item.node.id}>
+                    <li key={item.node.id} className="text-sm text-gray-300 bg-gray-700 bg-opacity-50 px-2 py-1 rounded flex justify-between items-center" title={item.node.name || item.node.id}>
                        <span className="truncate pr-2">{index + 1}. {item.node.name || item.node.id}</span>
                        <span className="font-semibold text-cyan-400 flex-shrink-0">{item.value.toFixed(2)}</span>
                     </li>
@@ -129,7 +129,7 @@ const DistributionStatItem: React.FC<{ label: string; items: DegreeDistributionR
                {items.map(item => (
                    <div key={item.degree} className="flex items-center gap-2" title={`${item.count} nodes have ${item.degree} connections (degree)`}>
                        <div className="w-12 font-mono text-right flex-shrink-0">{item.degree}</div>
-                       <div className="flex-grow bg-gray-700/50 rounded-sm h-4">
+                       <div className="flex-grow bg-gray-700 bg-opacity-50 rounded-sm h-4">
                            <div
                                className="bg-cyan-600 h-4 rounded-sm transition-all duration-500 text-right pr-1 text-white/80 font-semibold"
                                style={{ width: maxCount > 0 ? `${(item.count / maxCount) * 100}%` : '0%' }}
@@ -228,7 +228,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                     <XCircleIcon className="w-6 h-6" />
                 </button>
             </div>
-            <div className="bg-gray-700/50 p-3 rounded-md">
+            <div className="bg-gray-700 bg-opacity-50 p-3 rounded-md">
                 <h3 className="font-bold text-cyan-400 truncate" title={selectedNode.name || selectedNode.id}>
                     {selectedNode.name || selectedNode.id}
                 </h3>
@@ -240,7 +240,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                         <ul className="max-h-32 overflow-y-auto space-y-1 pr-1">
                             {nodeDetails.neighbors.map(n => (
                                 <li key={n.id}>
-                                    <button onClick={() => onNodeSelect(n)} className="w-full text-left text-sm text-gray-300 hover:text-cyan-400 truncate bg-gray-600/50 px-2 py-1 rounded">
+                                    <button onClick={() => onNodeSelect(n)} className="w-full text-left text-sm text-gray-300 hover:text-cyan-400 truncate bg-gray-600 bg-opacity-50 px-2 py-1 rounded">
                                         {n.name || n.id}
                                     </button>
                                 </li>
@@ -256,7 +256,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
         <div>
             <h2 className="text-xl font-bold text-white mb-2">Analysis Results</h2>
             {error && (
-                <div className="bg-red-900/50 border border-red-700 text-red-300 p-3 rounded-md flex items-start gap-3 my-4">
+                <div className="bg-red-900 bg-opacity-50 border border-red-700 text-red-300 p-3 rounded-md flex items-start gap-3 my-4">
                     <AlertTriangleIcon className="w-5 h-5 mt-0.5 flex-shrink-0" />
                     <div>
                       <h3 className="font-semibold">Error</h3>

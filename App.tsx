@@ -137,7 +137,7 @@ const App: React.FC = () => {
 
   return (
     <div className="h-screen flex flex-col font-sans bg-gray-900 text-gray-200">
-      <header className="bg-gray-800/50 backdrop-blur-sm shadow-lg p-4 z-10 border-b border-gray-700">
+      <header className="bg-gray-800 bg-opacity-50 backdrop-blur-sm shadow-lg p-4 z-10 border-b border-gray-700">
         <div className="container mx-auto flex items-center gap-4">
           <GraphIcon className="w-8 h-8 text-cyan-400" />
           <h1 className="text-2xl font-bold tracking-tight text-white">
@@ -147,7 +147,7 @@ const App: React.FC = () => {
       </header>
 
       <main className="flex-grow flex flex-col md:flex-row container mx-auto p-4 gap-4 min-h-0">
-        <div className="w-full md:w-1/3 lg:w-1/4 flex-shrink-0 md:h-full max-h-[50%] md:max-h-none">
+        <div className="w-full md:w-1/3 lg:w-1/4 flex-shrink-0 md:h-full max-h-1/2 md:max-h-none">
           <ControlPanel
             onFileSelect={handleFileSelect}
             onAnalyze={handleAnalyze}

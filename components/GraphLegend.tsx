@@ -23,7 +23,7 @@ const GraphLegend: React.FC<GraphLegendProps> = ({ isGedcom }) => {
     const items = isGedcom ? gedcomItems : defaultItems;
 
     return (
-        <div className="absolute top-4 left-4 bg-gray-900/70 backdrop-blur-sm p-3 rounded-lg border border-gray-700 shadow-lg">
+        <div className="absolute top-4 left-4 bg-gray-900 bg-opacity-70 backdrop-blur-sm p-3 rounded-lg border border-gray-700 shadow-lg">
             <div className="flex flex-col gap-2">
                 {items.map(item => (
                     <LegendItem key={item.label} color={item.color} label={item.label} />

@@ -1,0 +1,50 @@
+# GitHub Action to build and deploy a web app with Tailwind CSS to GitHub Pages.
+# This workflow is triggered on every push to the 'main' branch.
+
+name: Build and Deploy to GitHub Pages
+
+# Controls when the workflow will run
+on:
+  push:
+    branches:
+      - main  # Set this to your primary branch name
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This job handles the building and deployment of the project
+  build-and-deploy:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Step 1: Checks out your repository under $GITHUB_WORKSPACE, so your workflow can access it.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Sets up Node.js environment. This is required for running npm commands.
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18' # Use a stable Node.js version
+
+      # Step 3: Installs the project dependencies. This includes Tailwind CSS and any other dev dependencies.
+      - name: Install dependencies
+        run: npm ci
+
+      # Step 4: Runs the build command. This is a crucial step that
+      # compiles your code and processes Tailwind CSS into a final, optimized
+      # stylesheet, which is then placed in the 'dist' folder.
+      - name: Build project
+        run: npm run build # Or whatever your build script is, e.g., 'vite build'
+
+      # Step 5: Deploys the 'dist' folder to GitHub Pages.
+      # The 'peaceiris/actions-gh-pages' action is a popular and effective way
+      # to handle this deployment process.
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist  # Specifies the directory to be deployed. Make sure this matches your build output.
+          # The branch to publish to. This action will create it if it doesn't exist.
+          publish_branch: gh-pages

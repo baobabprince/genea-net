@@ -1,28 +1,41 @@
-import React, { Component, ReactNode } from 'react';
+
+import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangleIcon } from './ui/Icons';
 
 interface Props {
-  children: ReactNode;
+  children?: ReactNode;
 }
 
 interface State {
   hasError: boolean;
 }
 
+/**
+ * ErrorBoundary catches errors in its child component tree and displays a fallback UI.
+ */
+// Fix: Importing Component directly and extending it helps TypeScript resolve inherited members like 'props'.
 class ErrorBoundary extends Component<Props, State> {
+  // Explicitly declare state to ensure proper typing.
   public state: State = {
-    hasError: false,
+    hasError: false
   };
 
-  public static getDerivedStateFromError(_: Error): State {
+  // Fix: Removed redundant constructor to rely on class property initialization for better type inference in some environments.
+
+  // Standard static method for updating error state based on an exception.
+  static getDerivedStateFromError(_: Error): State {
+    // Update state so the next render will show the fallback UI.
     return { hasError: true };
   }
 
-  public componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+  // Standard lifecycle method for logging caught errors.
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    // Log the error to console or an error monitoring service.
     console.error('Uncaught error:', error, errorInfo);
   }
 
-  public render() {
+  render() {
+    // If an error occurred, render the fallback UI.
     if (this.state.hasError) {
       return (
         <div className="flex items-center justify-center h-screen bg-gray-900 text-gray-300">
@@ -44,7 +57,9 @@ class ErrorBoundary extends Component<Props, State> {
       );
     }
 
-    return this.props.children;
+    // When no error exists, render children normally.
+    // Fix: Explicitly returning children and ensuring TS recognizes 'props' correctly.
+    return this.props.children || null;
   }
 }
 

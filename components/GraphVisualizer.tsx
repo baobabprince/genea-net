@@ -1,6 +1,7 @@
+
 import React, { useMemo, useRef, useState, useLayoutEffect } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
-import { GraphData, NodeObject, LinkObject } from '../types';
+import { GraphData, NodeObject, LinkObject, AnalysisResult } from '../types';
 
 interface GraphVisualizerProps {
   fgRef: React.MutableRefObject<any>;
@@ -10,6 +11,7 @@ interface GraphVisualizerProps {
   hoveredNode: NodeObject | null;
   onNodeHover: (node: NodeObject | null) => void;
   selectedNode: NodeObject | null;
+  analysisResult: AnalysisResult | null;
 }
 
 const GraphVisualizer: React.FC<GraphVisualizerProps> = ({ 
@@ -19,7 +21,8 @@ const GraphVisualizer: React.FC<GraphVisualizerProps> = ({
   onBackgroundClick,
   hoveredNode,
   onNodeHover,
-  selectedNode
+  selectedNode,
+  analysisResult
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -38,6 +41,26 @@ const GraphVisualizer: React.FC<GraphVisualizerProps> = ({
     resizeObserver.observe(containerRef.current);
     return () => resizeObserver.disconnect();
   }, []);
+
+  const communityColorMap = useMemo(() => {
+    const map = new Map<string, string>();
+    const colors = [
+        '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
+        '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf',
+        '#aec7e8', '#ffbb78', '#98df8a', '#ff9896', '#c5b0d5',
+        '#c49c94', '#f7b6d2', '#c7c7c7', '#dbdb8d', '#9edae5'
+    ];
+    
+    if (analysisResult?.communities) {
+        analysisResult.communities.forEach((community, i) => {
+            const color = colors[i % colors.length];
+            community.forEach(node => {
+                map.set(node.id, color);
+            });
+        });
+    }
+    return map;
+  }, [analysisResult]);
   
   const {highlightNodes, highlightLinks} = useMemo(() => {
     const highlightNodes = new Set();
@@ -64,25 +87,59 @@ const GraphVisualizer: React.FC<GraphVisualizerProps> = ({
 
   const getLinkColor = (link: LinkObject) => {
     const isHighlighted = highlightLinks.has(link);
-    const baseColor = link.type === 'marriage' ? '255, 165, 0' : '135, 206, 250';
-    const defaultColor = '107, 114, 128';
+    
+    let baseColor = '107, 114, 128'; // Default Gray
+    if (link.type === 'marriage') baseColor = '255, 165, 0'; // Orange
+    else if (link.type === 'parent-child') baseColor = '135, 206, 250'; // Light Blue
+    else if (link.type === 'event_link') baseColor = '74, 222, 128'; // Greenish
 
     if (hoveredNode || selectedNode) {
         if(isHighlighted) {
-            return link.type ? `rgba(${baseColor}, 0.9)` : `rgba(${defaultColor}, 0.8)`;
+            return `rgba(${baseColor}, 0.9)`;
         }
-        return `rgba(${defaultColor}, 0.1)`;
+        return `rgba(107, 114, 128, 0.05)`;
     }
     
-    return link.type ? `rgba(${baseColor}, ${link.type === 'marriage' ? '0.9' : '0.7'})` : `rgba(${defaultColor}, 0.5)`;
+    // Normal opacity
+    return `rgba(${baseColor}, ${link.type === 'marriage' ? '0.9' : '0.5'})`;
   };
   
   const getNodeColor = (node: NodeObject) => {
-      const isHighlighted = highlightNodes.has(node.id);
-      if (hoveredNode || selectedNode) {
-          return isHighlighted ? '#06b6d4' : 'rgba(209, 213, 219, 0.3)';
-      }
-      return '#06b6d4';
+    const nodeToInspect = hoveredNode || selectedNode;
+    const isHighlighted = highlightNodes.has(node.id);
+
+    if (nodeToInspect) {
+        if (node.id === nodeToInspect.id) {
+            return '#facc15'; // Bright yellow for selected/hovered
+        }
+        if (isHighlighted) {
+            return '#22d3ee'; // Bright cyan for neighbors
+        }
+        return 'rgba(209, 213, 219, 0.2)'; // Dim non-neighbors
+    }
+
+    // Default color logic based on node TYPE
+    // 1. Check Community Map first if exists (override type colors if community detection ran)
+    //    (Actually, keeping Type colors is often more useful in advanced mode, but let's stick to community if present)
+    if (communityColorMap.has(node.id)) {
+        return communityColorMap.get(node.id);
+    }
+
+    // 2. Type based coloring
+    switch (node.type) {
+        case 'place': return '#16a34a'; // Green
+        case 'date': return '#ea580c'; // Orange
+        case 'source': return '#9333ea'; // Purple
+        case 'person': return '#0284c7'; // Blue (Standard)
+        default: return '#06b6d4'; // Cyan default
+    }
+  }
+
+  // Adjust node val (size) based on type
+  const getNodeVal = (node: NodeObject) => {
+      if (node.type === 'person' || !node.type) return 8;
+      if (node.type === 'place') return 6;
+      return 4; // Dates/Sources smaller
   }
 
   return (
@@ -93,11 +150,11 @@ const GraphVisualizer: React.FC<GraphVisualizerProps> = ({
         height={size.height}
         graphData={graphData}
         nodeLabel={(node: NodeObject) => node.name || node.id}
-        nodeVal={8}
+        nodeVal={getNodeVal}
         nodeColor={getNodeColor}
         linkColor={getLinkColor}
         linkWidth={(link: LinkObject) => highlightLinks.has(link) ? (link.type === 'marriage' ? 2.5 : 2) : 1}
-        linkDirectionalParticles={(link: LinkObject) => (link.type === 'parent-child' && highlightLinks.has(link)) ? 1 : 0}
+        linkDirectionalParticles={(link: LinkObject) => (highlightLinks.has(link) && link.type !== 'event_link') ? 1 : 0}
         linkDirectionalParticleWidth={2.5}
         linkDirectionalParticleColor={(link: LinkObject) => getLinkColor(link)}
         backgroundColor="transparent"

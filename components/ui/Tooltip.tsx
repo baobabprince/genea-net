@@ -4,21 +4,22 @@ import React, { useState, ReactNode } from 'react';
 interface TooltipProps {
   content: ReactNode;
   children: ReactNode;
+  className?: string;
 }
 
-const Tooltip: React.FC<TooltipProps> = ({ content, children }) => {
+const Tooltip: React.FC<TooltipProps> = ({ content, children, className = '' }) => {
   const [isVisible, setIsVisible] = useState(false);
 
   return (
     <div
-      className="relative inline-flex"
+      className={`relative inline-flex ${className}`}
       onMouseEnter={() => setIsVisible(true)}
       onMouseLeave={() => setIsVisible(false)}
     >
       {children}
       {isVisible && (
         <div
-          className="absolute bottom-full mb-2 w-64 p-3 bg-gray-900 text-gray-200 text-sm rounded-lg shadow-xl border border-gray-700 z-50"
+          className="absolute bottom-full mb-2 w-64 p-3 bg-gray-900 text-gray-200 text-sm rounded-lg shadow-2xl border border-gray-700 z-50 text-right leading-relaxed"
           style={{ 
             left: '50%', 
             transform: 'translateX(-50%)',
@@ -31,7 +32,7 @@ const Tooltip: React.FC<TooltipProps> = ({ content, children }) => {
             style={{
               borderLeft: '6px solid transparent',
               borderRight: '6px solid transparent',
-              borderTop: '6px solid #374151' // Corresponds to border-gray-700
+              borderTop: '6px solid #374151'
             }}
           />
         </div>

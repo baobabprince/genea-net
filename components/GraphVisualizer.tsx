@@ -12,6 +12,7 @@ interface GraphVisualizerProps {
   onNodeHover: (node: NodeObject | null) => void;
   selectedNode: NodeObject | null;
   analysisResult: AnalysisResult | null;
+  theme?: 'light' | 'dark';
 }
 
 const GraphVisualizer: React.FC<GraphVisualizerProps> = ({ 
@@ -22,7 +23,8 @@ const GraphVisualizer: React.FC<GraphVisualizerProps> = ({
   hoveredNode,
   onNodeHover,
   selectedNode,
-  analysisResult
+  analysisResult,
+  theme = 'dark'
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -88,20 +90,20 @@ const GraphVisualizer: React.FC<GraphVisualizerProps> = ({
   const getLinkColor = (link: LinkObject) => {
     const isHighlighted = highlightLinks.has(link);
     
-    let baseColor = '107, 114, 128'; // Default Gray
-    if (link.type === 'marriage') baseColor = '255, 165, 0'; // Orange
-    else if (link.type === 'parent-child') baseColor = '135, 206, 250'; // Light Blue
-    else if (link.type === 'event_link') baseColor = '74, 222, 128'; // Greenish
+    let baseColor = theme === 'dark' ? '120, 130, 145' : '100, 116, 139'; // Default Gray
+    if (link.type === 'marriage') baseColor = '245, 158, 11'; // Warm Orange Amber
+    else if (link.type === 'parent-child') baseColor = theme === 'dark' ? '56, 189, 248' : '14, 165, 233'; // Sky Blue
+    else if (link.type === 'event_link') baseColor = '34, 197, 94'; // Emerald green
 
     if (hoveredNode || selectedNode) {
-        if(isHighlighted) {
-            return `rgba(${baseColor}, 0.9)`;
+        if (isHighlighted) {
+            return `rgba(${baseColor}, 0.95)`;
         }
-        return `rgba(107, 114, 128, 0.05)`;
+        return theme === 'dark' ? `rgba(100, 116, 139, 0.04)` : `rgba(100, 116, 139, 0.03)`;
     }
     
     // Normal opacity
-    return `rgba(${baseColor}, ${link.type === 'marriage' ? '0.9' : '0.5'})`;
+    return `rgba(${baseColor}, ${link.type === 'marriage' ? '0.85' : '0.45'})`;
   };
   
   const getNodeColor = (node: NodeObject) => {
@@ -110,28 +112,26 @@ const GraphVisualizer: React.FC<GraphVisualizerProps> = ({
 
     if (nodeToInspect) {
         if (node.id === nodeToInspect.id) {
-            return '#facc15'; // Bright yellow for selected/hovered
+            return '#eab308'; // Highly saturated golden yellow
         }
         if (isHighlighted) {
-            return '#22d3ee'; // Bright cyan for neighbors
+            return theme === 'dark' ? '#06b6d4' : '#0891b2'; // Bright cyan
         }
-        return 'rgba(209, 213, 219, 0.2)'; // Dim non-neighbors
+        return theme === 'dark' ? 'rgba(200, 200, 200, 0.12)' : 'rgba(100, 116, 139, 0.15)'; // Dim non-neighbors
     }
 
     // Default color logic based on node TYPE
-    // 1. Check Community Map first if exists (override type colors if community detection ran)
-    //    (Actually, keeping Type colors is often more useful in advanced mode, but let's stick to community if present)
     if (communityColorMap.has(node.id)) {
         return communityColorMap.get(node.id);
     }
 
     // 2. Type based coloring
     switch (node.type) {
-        case 'place': return '#16a34a'; // Green
-        case 'date': return '#ea580c'; // Orange
-        case 'source': return '#9333ea'; // Purple
-        case 'person': return '#0284c7'; // Blue (Standard)
-        default: return '#06b6d4'; // Cyan default
+        case 'place': return theme === 'dark' ? '#22c55e' : '#16a34a'; // Green
+        case 'date': return theme === 'dark' ? '#f97316' : '#ea580c'; // Orange
+        case 'source': return theme === 'dark' ? '#a855f7' : '#9333ea'; // Purple
+        case 'person': return theme === 'dark' ? '#38bdf8' : '#0284c7'; // Blue
+        default: return theme === 'dark' ? '#22d3ee' : '#0891b2'; // Cyan default
     }
   }
 
@@ -153,7 +153,7 @@ const GraphVisualizer: React.FC<GraphVisualizerProps> = ({
         nodeVal={getNodeVal}
         nodeColor={getNodeColor}
         linkColor={getLinkColor}
-        linkWidth={(link: LinkObject) => highlightLinks.has(link) ? (link.type === 'marriage' ? 2.5 : 2) : 1}
+        linkWidth={(link: LinkObject) => highlightLinks.has(link) ? (link.type === 'marriage' ? 2.8 : 2.2) : 1}
         linkDirectionalParticles={(link: LinkObject) => (highlightLinks.has(link) && link.type !== 'event_link') ? 1 : 0}
         linkDirectionalParticleWidth={2.5}
         linkDirectionalParticleColor={(link: LinkObject) => getLinkColor(link)}

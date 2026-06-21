@@ -7,6 +7,7 @@ import GraphVisualizer from './components/GraphVisualizer';
 import GraphLegend from './components/GraphLegend';
 import { UploadIcon, GraphIcon } from './components/ui/Icons';
 import { GoogleGenAI } from "@google/genai";
+import { Language, getTranslation } from './utils/localization';
 
 const GRAPH_WORKER_CODE = `
 const bfs = (startNodeId, adjacencyList) => {
@@ -558,7 +559,9 @@ const App: React.FC = () => {
   const [isDetectingCommunities, setIsDetectingCommunities] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [isGedcom, setIsGedcom] = useState<boolean>(false);
-  const [statusMessage, setStatusMessage] = useState<string>('');
+  const [statusMessage, setStatusMessage] = useState<{key: string; param?: string} | null>(null);
+  const [language, setLanguage] = useState<Language>('he');
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const [selectedNode, setSelectedNode] = useState<NodeObject | null>(null);
   const [selectedNodeStats, setSelectedNodeStats] = useState<NodeAnalysisResult | null>(null);
   const [hoveredNode, setHoveredNode] = useState<NodeObject | null>(null);
@@ -579,11 +582,11 @@ const App: React.FC = () => {
       if (type === 'analysis_success') {
         setIsAnalyzing(false);
         setAnalysisResult(result);
-        setStatusMessage('Analysis complete.');
+        setStatusMessage({ key: 'analysisComplete' });
       } else if (type === 'communities_success') {
         setIsDetectingCommunities(false);
         setAnalysisResult(prev => prev ? ({ ...prev, communities }) : null);
-        setStatusMessage(`Detected ${communities.length} communities.`);
+        setStatusMessage({ key: 'communitiesDetected', param: String(communities.length) });
       } else if (type === 'node_analysis_success') {
         setSelectedNodeStats(result);
       } else if (type === 'error') {
@@ -606,11 +609,11 @@ const App: React.FC = () => {
         setIsGedcom(isGedcomFile);
         const data = isGedcomFile ? parseGedcom(content, false) : parseEdgeList(content);
         setGraphData(data);
-        setStatusMessage(`Loaded ${file.name}.`);
-      } catch (err) { setError('Error parsing file.'); }
+        setStatusMessage({ key: 'loadedFile', param: file.name });
+      } catch (err) { setError(language === 'he' ? 'שגיאה בניתוח הקובץ.' : 'Error parsing file.'); }
     };
     reader.readAsText(file);
-  }, []);
+  }, [language]);
 
   const handleSampleSelect = useCallback((content: string, type: 'ged' | 'txt', name: string) => {
     setError(null); setAnalysisResult(null); setSelectedNode(null); setAiSummary(null);
@@ -619,7 +622,7 @@ const App: React.FC = () => {
     setIsGedcom(isGedcomFile);
     const data = isGedcomFile ? parseGedcom(content, false) : parseEdgeList(content);
     setGraphData(data);
-    setStatusMessage(`Loaded sample: ${name}.`);
+    setStatusMessage({ key: 'loadedSample', param: name });
   }, []);
 
   const handleAnalyze = useCallback(() => {
@@ -657,33 +660,105 @@ const App: React.FC = () => {
     setIsGeneratingAi(true); setAiSummary(null);
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const prompt = `נתח את הנתונים הבאים על עץ משפחה/רשת חברתית: ${JSON.stringify(analysisResult)}`;
+      const prompt = language === 'he' 
+        ? `נתח את הנתונים הבאים על עץ משפחה/רשת חברתית: ${JSON.stringify(analysisResult)}`
+        : `Analyze the following metrics of this social/genealogical network: ${JSON.stringify(analysisResult)}`;
+
+      const systemInstruction = language === 'he'
+        ? "אתה מומחה גנאלוגיה ורשתות. נתח את הנתונים וספק הסבר מה ניתן ללמוד מהם על המבנה המשפחתי, צמתים מרכזיים ודפוסים חריגים. ענה בעברית."
+        : "You are an expert in genealogy and complex network structures. Analyze the provided metrics and explain family structures, key center figures, branching patterns, pedigree collapse and any network anomalies. Respond in English.";
+
       const response = await ai.models.generateContent({
-        model: 'gemini-3-pro-preview',
+        model: 'gemini-2.5-flash',
         contents: prompt,
         config: { 
-          systemInstruction: "אתה מומחה גנאלוגיה ורשתות. נתח את הנתונים וספק הסבר מה ניתן ללמוד מהם על המבנה המשפחתי, צמתים מרכזיים ודפוסים חריגים. ענה בעברית.",
+          systemInstruction: systemInstruction,
           thinkingConfig: { thinkingBudget: 32768 } 
         }
       });
-      setAiSummary(response.text || 'לא נוצרו תובנות.');
+      setAiSummary(response.text || getTranslation(language, 'noInsights'));
     } catch (err: any) { 
         if (err?.message?.includes("Requested entity was not found.")) {
             await (window as any).aistudio.openSelectKey();
-            setError('מפתח ה-API לא תקף. אנא בחר מפתח חדש.');
+            setError(getTranslation(language, 'apiError'));
         } else {
-            setError('הפקת תובנות AI נכשלה.'); 
+            setError(getTranslation(language, 'generationFailed')); 
         }
     } finally { setIsGeneratingAi(false); }
-  }, [analysisResult]);
+  }, [analysisResult, language]);
+
+  const getRenderedStatusMessage = () => {
+    if (!statusMessage) return '';
+    const translated = getTranslation(language, statusMessage.key as any);
+    if (statusMessage.param) {
+      return translated.replaceAll('{count}', statusMessage.param).replaceAll('{name}', statusMessage.param);
+    }
+    return translated;
+  };
+
+  const pageBg = theme === 'dark' ? 'bg-gray-950 text-gray-200' : 'bg-gray-100 text-gray-800';
+  const headerBg = theme === 'dark' ? 'bg-gray-900 bg-opacity-70 border-gray-800 text-white' : 'bg-white bg-opacity-85 border-gray-200 text-gray-800 shadow-sm';
+  const canvasBgClass = theme === 'dark' ? 'bg-gray-900 border-gray-800 shadow-2xl h-full min-h-[300px]' : 'bg-white border-gray-200 shadow-lg h-full min-h-[300px] text-gray-900';
+
+  const finalStatusMsg = getRenderedStatusMessage();
 
   return (
-    <div className="h-screen flex flex-col font-sans bg-gray-900 text-gray-200 overflow-hidden">
-      <header className="bg-gray-800 bg-opacity-50 backdrop-blur-sm shadow-lg p-4 z-10 border-b border-gray-700 flex-shrink-0">
+    <div dir={language === 'he' ? 'rtl' : 'ltr'} className={`h-screen flex flex-col font-sans transition-colors duration-200 ${pageBg} overflow-hidden`}>
+      <header className={`backdrop-blur-md p-4 z-10 border-b flex-shrink-0 transition-colors duration-200 ${headerBg}`}>
         <div className="container mx-auto flex items-center gap-4">
-          <GraphIcon className="w-8 h-8 text-cyan-400" />
-          <h1 className="text-2xl font-bold tracking-tight text-white">מנתח רשתות גנאלוגי</h1>
-          {statusMessage && <span className="ml-auto text-xs text-cyan-500 animate-pulse">{statusMessage}</span>}
+          <GraphIcon className="w-8 h-8 text-cyan-500" />
+          <h1 className="text-xl md:text-2xl font-bold tracking-tight">
+              {getTranslation(language, 'title')}
+          </h1>
+          {finalStatusMsg && <span className={`${language === 'he' ? 'mr-auto pl-3' : 'ml-auto pr-3'} text-xs text-cyan-500 font-semibold animate-pulse`}>{finalStatusMsg}</span>}
+          
+          <div className={`flex items-center gap-2 ${finalStatusMsg ? '' : (language === 'he' ? 'mr-auto' : 'ml-auto')}`}>
+              {/* Language Switcher */}
+              <button
+                onClick={() => setLanguage(language === 'he' ? 'en' : 'he')}
+                className={`flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md border font-bold tracking-wider uppercase transition-all duration-200 ${
+                  theme === 'dark'
+                    ? 'bg-gray-800/80 border-gray-700 text-cyan-400 hover:bg-gray-700 hover:text-cyan-300'
+                    : 'bg-gray-50 border-gray-200 text-cyan-750 hover:bg-gray-100 hover:text-cyan-800 shadow-sm'
+                }`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="2" y1="12" x2="22" y2="12" />
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                </svg>
+                {language === 'he' ? 'English' : 'עברית'}
+              </button>
+
+              {/* Theme Toggle Button */}
+              <button
+                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                className={`p-1.5 rounded-md border transition-all duration-200 ${
+                  theme === 'dark'
+                    ? 'bg-gray-800/80 border-gray-700 text-yellow-500 hover:bg-gray-700 hover:text-yellow-400'
+                    : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900 shadow-sm'
+                }`}
+                title={language === 'he' ? 'שינוי מצב תצוגה' : 'Toggle view mode'}
+              >
+                {theme === 'dark' ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="4" />
+                    <path d="M12 2v2" />
+                    <path d="M12 20v2" />
+                    <path d="m4.93 4.93 1.41 1.41" />
+                    <path d="m17.66 17.66 1.41 1.41" />
+                    <path d="M2 12h2" />
+                    <path d="M20 12h2" />
+                    <path d="m6.34 17.66-1.41 1.41" />
+                    <path d="m19.07 4.93-1.41 1.41" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+                  </svg>
+                )}
+              </button>
+          </div>
         </div>
       </header>
       <main className="flex-grow flex flex-col md:flex-row container mx-auto p-4 gap-4 min-h-0 overflow-hidden md:overflow-visible">
@@ -709,9 +784,11 @@ const App: React.FC = () => {
             onGenerateAiInsights={handleGenerateAiInsights}
             aiSummary={aiSummary}
             isGeneratingAi={isGeneratingAi}
+            lang={language}
+            theme={theme}
           />
         </div>
-        <div className="flex-grow flex-1 bg-gray-800 rounded-lg shadow-2xl overflow-hidden relative border border-gray-700 h-full min-h-[300px]">
+        <div className={`flex-grow flex-1 rounded-lg overflow-hidden relative border transition-colors duration-250 ${canvasBgClass}`}>
           {graphData ? (
             <>
               <GraphVisualizer
@@ -723,14 +800,25 @@ const App: React.FC = () => {
                 onNodeHover={setHoveredNode}
                 selectedNode={selectedNode}
                 analysisResult={analysisResult}
+                theme={theme}
               />
-              <GraphLegend isGedcom={isGedcom} isAdvancedMode={isAdvancedMode} hasCommunities={!!analysisResult?.communities} />
+              <GraphLegend 
+                isGedcom={isGedcom} 
+                isAdvancedMode={isAdvancedMode} 
+                hasCommunities={!!analysisResult?.communities} 
+                lang={language}
+                theme={theme}
+              />
             </>
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-center p-8">
-              <UploadIcon className="w-24 h-24 text-gray-600 mb-6" />
-              <h2 className="text-2xl font-semibold text-gray-300">מוכן להצגה</h2>
-              <p className="mt-2 text-gray-400 max-w-md">העלה קובץ GEDCOM או רשימת קשרים כדי להתחיל בחישוב המדדים.</p>
+              <UploadIcon className={`w-20 h-20 ${theme === 'dark' ? 'text-gray-700' : 'text-gray-300'} mb-6`} />
+              <h2 className={`text-xl font-bold ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                  {getTranslation(language, 'readyToDisplayHeader')}
+              </h2>
+              <p className={`mt-2 text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'} max-w-md`}>
+                  {getTranslation(language, 'readyToDisplaySubtitle')}
+              </p>
             </div>
           )}
         </div>

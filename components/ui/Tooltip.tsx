@@ -5,9 +5,10 @@ interface TooltipProps {
   content: ReactNode;
   children: ReactNode;
   className?: string;
+  theme?: 'light' | 'dark';
 }
 
-const Tooltip: React.FC<TooltipProps> = ({ content, children, className = '' }) => {
+const Tooltip: React.FC<TooltipProps> = ({ content, children, className = '', theme = 'dark' }) => {
   const [isVisible, setIsVisible] = useState(false);
 
   return (
@@ -19,7 +20,11 @@ const Tooltip: React.FC<TooltipProps> = ({ content, children, className = '' }) 
       {children}
       {isVisible && (
         <div
-          className="absolute bottom-full mb-2 w-64 p-3 bg-gray-900 text-gray-200 text-sm rounded-lg shadow-2xl border border-gray-700 z-50 text-right leading-relaxed"
+          className={`absolute bottom-full mb-2 w-64 p-3 ${
+            theme === 'dark' 
+              ? 'bg-gray-950 text-gray-200 border-gray-700' 
+              : 'bg-white text-gray-800 border-gray-300 shadow-xl'
+          } text-sm rounded-lg shadow-2xl border border-opacity-70 z-50 text-right leading-relaxed`}
           style={{ 
             left: '50%', 
             transform: 'translateX(-50%)',
@@ -32,7 +37,7 @@ const Tooltip: React.FC<TooltipProps> = ({ content, children, className = '' }) 
             style={{
               borderLeft: '6px solid transparent',
               borderRight: '6px solid transparent',
-              borderTop: '6px solid #374151'
+              borderTop: theme === 'dark' ? '6px solid #374151' : '6px solid #d1d5db'
             }}
           />
         </div>

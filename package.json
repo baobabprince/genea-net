@@ -9,14 +9,16 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "react-dom": "^19.1.1",
+    "@google/genai": "^1.15.0",
     "react": "^19.1.1",
-    "react-force-graph-2d": "latest",
-    "@google/genai": "^1.15.0"
+    "react-dom": "^19.1.1",
+    "react-force-graph-2d": "latest"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.3.1",
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
+    "tailwindcss": "^4.3.1",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
   }

@@ -24,7 +24,7 @@ const GraphVisualizer: React.FC<GraphVisualizerProps> = ({
   onNodeHover,
   selectedNode,
   analysisResult,
-  theme = 'dark'
+  theme = 'light'
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -90,9 +90,9 @@ const GraphVisualizer: React.FC<GraphVisualizerProps> = ({
   const getLinkColor = (link: LinkObject) => {
     const isHighlighted = highlightLinks.has(link);
     
-    let baseColor = theme === 'dark' ? '120, 130, 145' : '100, 116, 139'; // Default Gray
-    if (link.type === 'marriage') baseColor = '245, 158, 11'; // Warm Orange Amber
-    else if (link.type === 'parent-child') baseColor = theme === 'dark' ? '56, 189, 248' : '14, 165, 233'; // Sky Blue
+    let baseColor = theme === 'dark' ? '120, 130, 145' : '130, 135, 126'; // anafim muted
+    if (link.type === 'marriage') baseColor = theme === 'dark' ? '245, 158, 11' : '172, 105, 76'; // clay
+    else if (link.type === 'parent-child') baseColor = theme === 'dark' ? '56, 189, 248' : '69, 99, 82'; // sage
     else if (link.type === 'event_link') baseColor = '34, 197, 94'; // Emerald green
 
     if (hoveredNode || selectedNode) {
@@ -115,9 +115,9 @@ const GraphVisualizer: React.FC<GraphVisualizerProps> = ({
             return '#eab308'; // Highly saturated golden yellow
         }
         if (isHighlighted) {
-            return theme === 'dark' ? '#06b6d4' : '#0891b2'; // Bright cyan
+            return theme === 'dark' ? '#06b6d4' : '#456352'; // sage
         }
-        return theme === 'dark' ? 'rgba(200, 200, 200, 0.12)' : 'rgba(100, 116, 139, 0.15)'; // Dim non-neighbors
+        return theme === 'dark' ? 'rgba(200, 200, 200, 0.12)' : 'rgba(130, 135, 126, 0.12)'; // Dim
     }
 
     // Default color logic based on node TYPE
@@ -130,8 +130,8 @@ const GraphVisualizer: React.FC<GraphVisualizerProps> = ({
         case 'place': return theme === 'dark' ? '#22c55e' : '#16a34a'; // Green
         case 'date': return theme === 'dark' ? '#f97316' : '#ea580c'; // Orange
         case 'source': return theme === 'dark' ? '#a855f7' : '#9333ea'; // Purple
-        case 'person': return theme === 'dark' ? '#38bdf8' : '#0284c7'; // Blue
-        default: return theme === 'dark' ? '#22d3ee' : '#0891b2'; // Cyan default
+        case 'person': return theme === 'dark' ? '#38bdf8' : '#456352'; // sage
+        default: return theme === 'dark' ? '#22d3ee' : '#456352'; // sage
     }
   }
 

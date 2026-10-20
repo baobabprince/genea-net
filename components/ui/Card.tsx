@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 interface CardProps {
@@ -7,12 +6,12 @@ interface CardProps {
   theme?: 'light' | 'dark';
 }
 
-const Card: React.FC<CardProps> = ({ children, className = '', theme = 'dark' }) => {
-  const baseBg = theme === 'dark' 
-    ? 'bg-gray-850 bg-opacity-70 border-gray-700/80 shadow-2xl' 
-    : 'bg-white bg-opacity-95 border-gray-200/80 shadow-lg';
+const Card: React.FC<CardProps> = ({ children, className = '', theme = 'light' }) => {
+  const baseBg = theme === 'dark'
+    ? 'bg-gray-850 bg-opacity-70 border-gray-700/80 shadow-2xl'
+    : 'bg-[#fefefb] border-[#e7e8e0] shadow-[0_4px_18px_#29392f14]';
   return (
-    <div className={`${baseBg} backdrop-blur-md rounded-lg border transition-all duration-200 ${className}`}>
+    <div className={`${baseBg} backdrop-blur-sm rounded-2xl border transition-all duration-200 ${className}`}>
       {children}
     </div>
   );

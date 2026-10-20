@@ -1,0 +1,50 @@
+name: Anafim default light theme
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Switch default theme to light + polish empty state
+        run: |
+          python3 << 'PY'
+          from pathlib import Path
+
+          app = Path('App.tsx').read_text()
+          app2 = app.replace(
+              "const [theme, setTheme] = useState<'light' | 'dark'>('dark');",
+              "const [theme, setTheme] = useState<'light' | 'dark'>('light');",
+          )
+          if app2 == app:
+              raise SystemExit('theme default not found')
+          app = app2
+
+          # empty-state icon/title for light mode → anafim muted/sage
+          app = app.replace(
+              "theme === 'dark' ? 'text-gray-700' : 'text-gray-300'} mb-6",
+              "theme === 'dark' ? 'text-gray-700' : 'text-[#a4a79f]'} mb-6",
+          )
+          app = app.replace(
+              "theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}",
+              "theme === 'dark' ? 'text-gray-300' : 'text-[#456352]'}",
+          )
+
+          Path('App.tsx').write_text(app)
+          print('OK: default theme is light')
+          PY
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add App.tsx
+          git diff --cached --quiet && echo 'no changes' && exit 0
+          git commit -m "fix(design): default to light theme (anafim cream)"
+          git push origin HEAD:main

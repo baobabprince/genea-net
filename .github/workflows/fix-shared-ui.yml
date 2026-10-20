@@ -1,0 +1,167 @@
+name: Fix shared storage UI
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-shared-ui.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 20
+
+      - name: Restore App.tsx from pre-placeholder and patch
+        run: |
+          set -euo pipefail
+          git show 29bcc3f07bdbea0fad8b485d64fd62b7331d7ff4:App.tsx > App.tsx
+          git show 29bcc3f07bdbea0fad8b485d64fd62b7331d7ff4:components/ControlPanel.tsx > components/ControlPanel.tsx
+
+          python3 << 'PY'
+          from pathlib import Path
+
+          app = Path('App.tsx')
+          t = app.read_text()
+
+          if 'baobabSharedStorage' not in t:
+              needle = "from './services/graphService';"
+              t = t.replace(needle, needle + "\nimport { saveSharedExport, loadSharedExport, hasSharedExport, formatSharedSummary } from './utils/baobabSharedStorage';", 1)
+
+          old_loaded = """        const data = isGedcomFile ? parseGedcom(content, false) : parseEdgeList(content);
+        setGraphData(data);
+        setStatusMessage({ key: 'loadedFile', param: file.name });"""
+          new_loaded = """        const data = isGedcomFile ? parseGedcom(content, false) : parseEdgeList(content);
+        setGraphData(data);
+        setStatusMessage({ key: 'loadedFile', param: file.name });
+        if (isGedcomFile) {
+          try {
+            saveSharedExport({
+              source: 'genea-net',
+              filename: file.name,
+              gedcom: content,
+              meta: { personCount: data?.nodes?.length, title: file.name },
+            });
+          } catch (_) {}
+        }"""
+          if old_loaded in t and "source: 'genea-net'" not in t:
+              t = t.replace(old_loaded, new_loaded, 1)
+
+          if 'handleLoadShared' not in t:
+              marker = '  const handleAnalyze = useCallback(() => {'
+              handlers = '''  const handleLoadShared = useCallback(() => {
+    const shared = loadSharedExport();
+    if (!shared?.gedcom) {
+      setError(language === 'he' ? 'אין נתונים משותפים לטעינה.' : 'No shared data found.');
+      return;
+    }
+    setError(null); setAnalysisResult(null); setSelectedNode(null); setAiSummary(null);
+    try {
+      const content = shared.gedcom;
+      setRawFileContent(content);
+      setIsGedcom(true);
+      const data = parseGedcom(content, false);
+      setGraphData(data);
+      setStatusMessage({ key: 'loadedFile', param: shared.filename || 'shared.ged' });
+    } catch (err) {
+      setError(language === 'he' ? 'שגיאה בטעינת הנתונים המשותפים.' : 'Error loading shared data.');
+    }
+  }, [language]);
+
+  const handleSaveShared = useCallback(() => {
+    if (!rawFileContent || !isGedcom) {
+      setError(language === 'he' ? 'יש לטעון קובץ GEDCOM תחילה.' : 'Load a GEDCOM file first.');
+      return;
+    }
+    try {
+      saveSharedExport({
+        source: 'genea-net',
+        filename: 'from-genea-net.ged',
+        gedcom: rawFileContent,
+        meta: { personCount: graphData?.nodes?.length },
+      });
+      setStatusMessage({ key: 'loadedFile', param: language === 'he' ? 'נשמר לשיתוף בין האפליקציות' : 'Saved to shared storage' });
+    } catch (err) {
+      setError(language === 'he' ? 'שמירה לשיתוף נכשלה (זיכרון מלא?).' : 'Failed to save shared data.');
+    }
+  }, [rawFileContent, isGedcom, graphData, language]);
+
+'''
+              if marker not in t:
+                  raise SystemExit('handleAnalyze not found')
+              t = t.replace(marker, handlers + marker, 1)
+
+          if 'onLoadShared=' not in t:
+              import re
+              m = re.search(r'<ControlPanel\\b[^>]*>', t)
+              if not m:
+                  m = re.search(r'<ControlPanel\b[^>]*>', t)
+              if not m:
+                  raise SystemExit('ControlPanel usage not found')
+              tag = m.group(0)
+              if tag.endswith('/>'):
+                  new_tag = tag[:-2] + ' onLoadShared={handleLoadShared} onSaveShared={handleSaveShared} hasShared={hasSharedExport()} sharedSummary={formatSharedSummary(loadSharedExport())} />'
+              else:
+                  new_tag = tag[:-1] + ' onLoadShared={handleLoadShared} onSaveShared={handleSaveShared} hasShared={hasSharedExport()} sharedSummary={formatSharedSummary(loadSharedExport())}>'
+              t = t.replace(tag, new_tag, 1)
+
+          app.write_text(t)
+          print('App ok', 'handleLoadShared' in t, app.stat().st_size)
+
+          cp = Path('components/ControlPanel.tsx')
+          c = cp.read_text()
+          if 'onLoadShared' not in c:
+              c = c.replace(
+                  '  onFileSelect: (file: File) => void;\n',
+                  '  onFileSelect: (file: File) => void;\n  onLoadShared?: () => void;\n  onSaveShared?: () => void;\n  hasShared?: boolean;\n  sharedSummary?: string;\n',
+                  1,
+              )
+              c = c.replace(
+                  '  onFileSelect, onAnalyze, onDetectCommunities, onSampleSelect, error, analysisResult, isAnalyzing, isDetectingCommunities, hasGraphData, graphData,',
+                  '  onFileSelect, onLoadShared, onSaveShared, hasShared, sharedSummary, onAnalyze, onDetectCommunities, onSampleSelect, error, analysisResult, isAnalyzing, isDetectingCommunities, hasGraphData, graphData,',
+                  1,
+              )
+              anchor = '{!hasGraphData && <SampleDataSelector onSelect={onSampleSelect} lang={lang} theme={theme} />}'
+              shared_ui = '''{/* Baobab shared storage */}
+              <div className={`mt-3 p-3 rounded-xl border ${theme === 'dark' ? 'border-gray-700 bg-gray-800/50' : 'border-[#e7e8e0] bg-[#fefefb]'}`}>
+                <p className={`text-[10px] font-semibold mb-2 ${theme === 'dark' ? 'text-gray-400' : 'text-[#82877e]'`}>
+                  {lang === 'he' ? 'שיתוף בין אפליקציות (localStorage)' : 'Cross-app share (localStorage)'}
+                </p>
+                {sharedSummary ? (
+                  <p className={`text-[10px] mb-2 truncate ${theme === 'dark' ? 'text-gray-500' : 'text-[#a4a79f']}`}>{sharedSummary}</p>
+                ) : (
+                  <p className={`text-[10px] mb-2 ${theme === 'dark' ? 'text-gray-600' : 'text-[#a4a79f']}`}>
+                    {lang === 'he' ? 'אין עדיין נתונים משותפים' : 'No shared data yet'}
+                  </p>
+                )}
+                <div className="flex gap-2">
+                  <Button theme={theme} variant="secondary" onClick={() => onLoadShared?.()} disabled={!hasShared}>
+                    {lang === 'he' ? 'טען מהשיתוף' : 'Load shared'}
+                  </Button>
+                  <Button theme={theme} variant="secondary" onClick={() => onSaveShared?.()} disabled={!hasGraphData || !isGedcom}>
+                    {lang === 'he' ? 'שמור לשיתוף' : 'Save shared'}
+                  </Button>
+                </div>
+              </div>
+              ''' + anchor
+              if anchor not in c:
+                  raise SystemExit('SampleDataSelector anchor not found')
+              c = c.replace(anchor, shared_ui, 1)
+          cp.write_text(c)
+          print('CP ok', 'onLoadShared' in c, cp.stat().st_size)
+          PY
+
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add App.tsx components/ControlPanel.tsx
+          git status
+          git diff --cached --quiet && echo no-changes && exit 0
+          git commit -m "fix(shared): restore App and wire baobab localStorage save/load"
+          git push origin HEAD:main

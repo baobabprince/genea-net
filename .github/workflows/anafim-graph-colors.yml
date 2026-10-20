@@ -1,0 +1,52 @@
+name: Anafim graph colors
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch GraphVisualizer
+        run: |
+          python3 << 'PY'
+          from pathlib import Path
+          p = Path('components/GraphVisualizer.tsx')
+          gv = p.read_text()
+          reps = [
+            ("theme = 'dark'", "theme = 'light'"),
+            ("let baseColor = theme === 'dark' ? '120, 130, 145' : '100, 116, 139'; // Default Gray",
+             "let baseColor = theme === 'dark' ? '120, 130, 145' : '130, 135, 126'; // anafim muted"),
+            ("if (link.type === 'marriage') baseColor = '245, 158, 11'; // Warm Orange Amber",
+             "if (link.type === 'marriage') baseColor = theme === 'dark' ? '245, 158, 11' : '172, 105, 76'; // clay"),
+            ("else if (link.type === 'parent-child') baseColor = theme === 'dark' ? '56, 189, 248' : '14, 165, 233'; // Sky Blue",
+             "else if (link.type === 'parent-child') baseColor = theme === 'dark' ? '56, 189, 248' : '69, 99, 82'; // sage"),
+            ("return theme === 'dark' ? '#06b6d4' : '#0891b2'; // Bright cyan",
+             "return theme === 'dark' ? '#06b6d4' : '#456352'; // sage"),
+            ("case 'person': return theme === 'dark' ? '#38bdf8' : '#0284c7'; // Blue",
+             "case 'person': return theme === 'dark' ? '#38bdf8' : '#456352'; // sage"),
+            ("default: return theme === 'dark' ? '#22d3ee' : '#0891b2'; // Cyan default",
+             "default: return theme === 'dark' ? '#22d3ee' : '#456352'; // sage"),
+            ("return theme === 'dark' ? 'rgba(200, 200, 200, 0.12)' : 'rgba(100, 116, 139, 0.15)'; // Dim non-neighbors",
+             "return theme === 'dark' ? 'rgba(200, 200, 200, 0.12)' : 'rgba(130, 135, 126, 0.12)'; // Dim"),
+          ]
+          for old, new in reps:
+              if old not in gv:
+                  print('MISS', old[:50])
+              else:
+                  gv = gv.replace(old, new, 1)
+                  print('OK', old[:40])
+          p.write_text(gv)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add components/GraphVisualizer.tsx
+          git diff --cached --quiet && exit 0
+          git commit -m "style: anafim sage/clay graph node and link colors"
+          git push origin HEAD:main

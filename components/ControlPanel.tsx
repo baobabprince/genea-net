@@ -10,6 +10,10 @@ import { InfoIcon, UploadIcon, BarChart2Icon, XCircleIcon, SearchIcon, SparklesI
 
 interface ControlPanelProps {
   onFileSelect: (file: File) => void;
+  onLoadShared?: () => void;
+  onSaveShared?: () => void;
+  hasShared?: boolean;
+  sharedSummary?: string;
   onAnalyze: () => void;
   onDetectCommunities: () => void;
   onSampleSelect: (content: string, type: 'ged' | 'txt', name: string) => void;
@@ -213,7 +217,7 @@ const NodeButtonList: React.FC<{
 );
 
 const ControlPanel: React.FC<ControlPanelProps> = ({
-  onFileSelect, onAnalyze, onDetectCommunities, onSampleSelect, error, analysisResult, isAnalyzing, isDetectingCommunities, hasGraphData, graphData,
+  onFileSelect, onLoadShared, onSaveShared, hasShared, sharedSummary, onAnalyze, onDetectCommunities, onSampleSelect, error, analysisResult, isAnalyzing, isDetectingCommunities, hasGraphData, graphData,
   selectedNode, selectedNodeStats, onNodeSelect, onClearSelection, isAdvancedMode, onToggleAdvancedMode,
   isGedcom, onGenerateAiInsights, aiSummary, isGeneratingAi, lang, theme = 'dark'
 }) => {
@@ -297,6 +301,27 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                   </div>
               )}
 
+              {/* Baobab shared storage */}
+              <div className={`mt-3 p-3 rounded-xl border ${theme === 'dark' ? 'border-gray-700 bg-gray-800/50' : 'border-[#e7e8e0] bg-[#fefefb]'`}>
+                <p className={`text-[10px] font-semibold mb-2 ${theme === 'dark' ? 'text-gray-400' : 'text-[#82877e]'`}>
+                  {lang === 'he' ? 'שיתוף בין אפליקציות (localStorage)' : 'Cross-app share (localStorage)'}
+                </p>
+                {sharedSummary ? (
+                  <p className={`text-[10px] mb-2 truncate ${theme === 'dark' ? 'text-gray-500' : 'text-[#a4a79f]'}`}>{sharedSummary}</p>
+                ) : (
+                  <p className={`text-[10px] mb-2 ${theme === 'dark' ? 'text-gray-600' : 'text-[#a4a79f]'}`}>
+                    {lang === 'he' ? 'אין עדיין נתונים משותפים' : 'No shared data yet'}
+                  </p>
+                )}
+                <div className="flex gap-2">
+                  <Button theme={theme} variant="secondary" onClick={() => onLoadShared?.()} disabled={!hasShared}>
+                    {lang === 'he' ? 'טען מהשיתוף' : 'Load shared'}
+                  </Button>
+                  <Button theme={theme} variant="secondary" onClick={() => onSaveShared?.()} disabled={!hasGraphData || !isGedcom}>
+                    {lang === 'he' ? 'שמור לשיתוף' : 'Save shared'}
+                  </Button>
+                </div>
+              </div>
               {!hasGraphData && <SampleDataSelector onSelect={onSampleSelect} lang={lang} theme={theme} />}
           </div>
 

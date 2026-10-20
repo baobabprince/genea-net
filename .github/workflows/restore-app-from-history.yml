@@ -1,0 +1,40 @@
+name: Restore App from history
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/restore-app-from-history.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 50
+
+      - name: Restore files from good commit
+        run: |
+          set -eux
+          GOOD=29bcc3f07bdbea0fad8b485d64fd62b7331d7ff4
+          git show "$GOOD:App.tsx" > App.tsx
+          git show "$GOOD:components/ControlPanel.tsx" > components/ControlPanel.tsx
+          wc -c App.tsx components/ControlPanel.tsx
+          grep -q 'handleFileSelect' App.tsx
+
+      - name: Apply shared storage patch
+        run: python3 scripts/apply-shared-storage.py
+
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add App.tsx components/ControlPanel.tsx
+          git status
+          git diff --cached --quiet && exit 0
+          git commit -m "fix(shared): restore full App and wire baobab localStorage"
+          git push origin HEAD:main

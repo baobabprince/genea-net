@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -8,25 +7,22 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   theme?: 'light' | 'dark';
 }
 
-const Button: React.FC<ButtonProps> = ({ children, icon, variant = 'primary', theme = 'dark', ...props }) => {
-  const baseStyles = `w-full flex items-center justify-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-md shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-    theme === 'dark' ? 'focus:ring-offset-gray-900' : 'focus:ring-offset-white'
-  } disabled:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 active:scale-[0.98]`;
-  
+const Button: React.FC<ButtonProps> = ({ children, icon, variant = 'primary', theme = 'light', ...props }) => {
+  const baseStyles = `w-full flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold tracking-wide rounded-xl shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+    theme === 'dark' ? 'focus:ring-offset-gray-900' : 'focus:ring-offset-[#f8f7f3]'
+  } disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]`;
+
   const variants = {
     primary: theme === 'dark'
-      ? "bg-cyan-600 text-white hover:bg-cyan-500 hover:shadow-cyan-950/45 focus:ring-cyan-500"
-      : "bg-cyan-600 text-white hover:bg-cyan-700 hover:shadow-cyan-200/45 focus:ring-cyan-500",
+      ? 'bg-cyan-600 text-white hover:bg-cyan-500 focus:ring-cyan-500'
+      : 'bg-[#ac694c] text-white hover:bg-[#93583f] focus:ring-[#b47e59] shadow-[0_2px_8px_#ac694c33]',
     secondary: theme === 'dark'
-      ? "bg-gray-700 text-gray-200 border border-gray-650 hover:bg-gray-600 hover:text-white focus:ring-cyan-500"
-      : "bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200 hover:text-gray-900 focus:ring-cyan-500"
+      ? 'bg-gray-700 text-gray-200 border border-gray-600 hover:bg-gray-600 focus:ring-cyan-500'
+      : 'bg-[#edf1e9] text-[#456352] border border-[#d6e2cd] hover:bg-[#e9f0e5] focus:ring-[#456352]',
   };
 
   return (
-    <button
-      {...props}
-      className={`${baseStyles} ${variants[variant]}`}
-    >
+    <button {...props} className={`${baseStyles} ${variants[variant]}`}>
       {icon}
       {children}
     </button>

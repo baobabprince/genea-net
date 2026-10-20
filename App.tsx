@@ -561,7 +561,7 @@ const App: React.FC = () => {
   const [isGedcom, setIsGedcom] = useState<boolean>(false);
   const [statusMessage, setStatusMessage] = useState<{key: string; param?: string} | null>(null);
   const [language, setLanguage] = useState<Language>('he');
-  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [selectedNode, setSelectedNode] = useState<NodeObject | null>(null);
   const [selectedNodeStats, setSelectedNodeStats] = useState<NodeAnalysisResult | null>(null);
   const [hoveredNode, setHoveredNode] = useState<NodeObject | null>(null);
@@ -812,8 +812,8 @@ const App: React.FC = () => {
             </>
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-center p-8">
-              <UploadIcon className={`w-20 h-20 ${theme === 'dark' ? 'text-gray-700' : 'text-gray-300'} mb-6`} />
-              <h2 className={`text-xl font-bold ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+              <UploadIcon className={`w-20 h-20 ${theme === 'dark' ? 'text-gray-700' : 'text-[#a4a79f]'} mb-6`} />
+              <h2 className={`text-xl font-bold ${theme === 'dark' ? 'text-gray-300' : 'text-[#456352]'}`}>
                   {getTranslation(language, 'readyToDisplayHeader')}
               </h2>
               <p className={`mt-2 text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'} max-w-md`}>

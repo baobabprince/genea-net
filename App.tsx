@@ -596,7 +596,23 @@ const App: React.FC = () => {
         setError(workerError);
       }
     });
-    return () => { worker.terminate(); URL.revokeObjectURL(objectUrl); };
+  
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('baobab') === 'shared') {
+        handleLoadShared();
+        // clean query without reload
+        params.delete('baobab');
+        const next = params.toString();
+        const url = window.location.pathname + (next ? '?' + next : '') + window.location.hash;
+        window.history.replaceState({}, '', url);
+      }
+    } catch (_) {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return () => { worker.terminate(); URL.revokeObjectURL(objectUrl); };
   }, []);
 
   const handleFileSelect = useCallback((file: File) => {
@@ -825,7 +841,11 @@ const App: React.FC = () => {
             selectedNode={selectedNode}
             selectedNodeStats={selectedNodeStats}
             onNodeSelect={handleNodeClick}
-            onClearSelection={() = onLoadShared={handleLoadShared} onSaveShared={handleSaveShared} hasShared={hasSharedExport()} sharedSummary={formatSharedSummary(loadSharedExport())}> setSelectedNode(null)}
+            onClearSelection={() => setSelectedNode(null)}
+            onLoadShared={handleLoadShared}
+            onSaveShared={handleSaveShared}
+            hasShared={hasSharedExport()}
+            sharedSummary={formatSharedSummary(loadSharedExport())}
             isAdvancedMode={isAdvancedMode}
             onToggleAdvancedMode={handleToggleAdvancedMode}
             isGedcom={isGedcom}

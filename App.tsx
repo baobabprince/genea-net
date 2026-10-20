@@ -612,6 +612,22 @@ const App: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('baobab') === 'shared') {
+        handleLoadShared();
+        // clean query without reload
+        params.delete('baobab');
+        const next = params.toString();
+        const url = window.location.pathname + (next ? '?' + next : '') + window.location.hash;
+        window.history.replaceState({}, '', url);
+      }
+    } catch (_) {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return () => { worker.terminate(); URL.revokeObjectURL(objectUrl); };
   }, []);
 

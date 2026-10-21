@@ -795,6 +795,34 @@ const App: React.FC = () => {
           {finalStatusMsg && <span className={`${language === 'he' ? 'mr-auto pl-3' : 'ml-auto pr-3'} text-xs text-[#456352] font-semibold animate-pulse hidden sm:inline truncate max-w-[36vw]`}>{finalStatusMsg}</span>}
           
           <div className={`flex items-center gap-2 ${finalStatusMsg ? '' : (language === 'he' ? 'mr-auto' : 'ml-auto')}`}>
+
+              {/* Open family tree in Anafim — informative label, header placement */}
+              <a
+                href="https://baobabprince.github.io/anafim/"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => {
+                  try {
+                    if (rawFileContent && isGedcom) {
+                      saveSharedExport({
+                        source: 'genea-net',
+                        filename: 'family.ged',
+                        gedcom: rawFileContent,
+                        meta: { title: 'from genea-net' },
+                      });
+                    }
+                  } catch (_) {}
+                }}
+                className={`flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md border font-semibold transition-all duration-200 no-underline ${
+                  theme === 'dark'
+                    ? 'bg-gray-800/80 border-gray-700 text-gray-200 hover:bg-gray-700'
+                    : 'bg-[#fefefb] border-[#e7e8e0] text-[#456352] hover:bg-[#edf1e9] shadow-sm'
+                }`}
+                title={language === 'he' ? 'פתיחת אותו אילן במבט משפחתי' : 'Open the same tree in family view'}
+              >
+                {language === 'he' ? 'אילן המשפחה' : 'Family tree'}
+              </a>
+
               {/* Language Switcher */}
               <button
                 onClick={() => setLanguage(language === 'he' ? 'en' : 'he')}

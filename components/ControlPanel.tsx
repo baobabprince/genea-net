@@ -302,14 +302,40 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
               )}
 
               {/* Baobab shared storage */}
-              <div className={`mt-3 p-3 rounded-xl border ${theme === 'dark' ? 'border-gray-700 bg-gray-800/50' : 'border-[#e7e8e0] bg-[#fefefb]'`}>
-                <p className={`text-[10px] font-semibold mb-2 ${theme === 'dark' ? 'text-gray-400' : 'text-[#82877e]'`}>
+              <div
+                className={
+                  theme === 'dark'
+                    ? 'mt-3 p-3 rounded-xl border border-gray-700 bg-gray-800/50'
+                    : 'mt-3 p-3 rounded-xl border border-[#e7e8e0] bg-[#fefefb]'
+                }
+              >
+                <p
+                  className={
+                    theme === 'dark'
+                      ? 'text-[10px] font-semibold mb-2 text-gray-400'
+                      : 'text-[10px] font-semibold mb-2 text-[#82877e]'
+                  }
+                >
                   {lang === 'he' ? 'שיתוף בין אפליקציות (localStorage)' : 'Cross-app share (localStorage)'}
                 </p>
                 {sharedSummary ? (
-                  <p className={`text-[10px] mb-2 truncate ${theme === 'dark' ? 'text-gray-500' : 'text-[#a4a79f]'}`}>{sharedSummary}</p>
+                  <p
+                    className={
+                      theme === 'dark'
+                        ? 'text-[10px] mb-2 truncate text-gray-500'
+                        : 'text-[10px] mb-2 truncate text-[#a4a79f]'
+                    }
+                  >
+                    {sharedSummary}
+                  </p>
                 ) : (
-                  <p className={`text-[10px] mb-2 ${theme === 'dark' ? 'text-gray-600' : 'text-[#a4a79f]'}`}>
+                  <p
+                    className={
+                      theme === 'dark'
+                        ? 'text-[10px] mb-2 text-gray-600'
+                        : 'text-[10px] mb-2 text-[#a4a79f]'
+                    }
+                  >
                     {lang === 'he' ? 'אין עדיין נתונים משותפים' : 'No shared data yet'}
                   </p>
                 )}

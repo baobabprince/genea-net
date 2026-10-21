@@ -597,36 +597,8 @@ const App: React.FC = () => {
       }
     });
   
-  useEffect(() => {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('baobab') === 'shared') {
-        handleLoadShared();
-        // clean query without reload
-        params.delete('baobab');
-        const next = params.toString();
-        const url = window.location.pathname + (next ? '?' + next : '') + window.location.hash;
-        window.history.replaceState({}, '', url);
-      }
-    } catch (_) {}
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
 
-  useEffect(() => {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('baobab') === 'shared') {
-        handleLoadShared();
-        // clean query without reload
-        params.delete('baobab');
-        const next = params.toString();
-        const url = window.location.pathname + (next ? '?' + next : '') + window.location.hash;
-        window.history.replaceState({}, '', url);
-      }
-    } catch (_) {}
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   return () => { worker.terminate(); URL.revokeObjectURL(objectUrl); };
   }, []);
@@ -704,6 +676,21 @@ const App: React.FC = () => {
       setError(language === 'he' ? 'שמירה לשיתוף נכשלה (זיכרון מלא?).' : 'Failed to save shared data.');
     }
   }, [rawFileContent, isGedcom, graphData, language]);
+
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('baobab') === 'shared') {
+        handleLoadShared();
+        params.delete('baobab');
+        const next = params.toString();
+        const url = window.location.pathname + (next ? '?' + next : '') + window.location.hash;
+        window.history.replaceState({}, '', url);
+      }
+    } catch (_) {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
 
   const handleAnalyze = useCallback(() => {
     if (!graphData || !workerRef.current) return;

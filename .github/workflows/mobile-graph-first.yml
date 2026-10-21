@@ -1,0 +1,30 @@
+name: Mobile graph-first
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/mobile-graph-first.yml'
+      - 'scripts/mobile-graph-first.py'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scripts/mobile-graph-first.py
+      - name: Verify build
+        run: |
+          npm ci || npm install
+          npm run build
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add App.tsx components/GraphLegend.tsx
+          git diff --cached --quiet && exit 0
+          git commit -m "fix(mobile): graph-first layout — panel as bottom sheet, full canvas"
+          git push origin HEAD:main

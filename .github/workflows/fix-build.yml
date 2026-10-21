@@ -1,0 +1,30 @@
+name: Fix build
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/fix-build.yml'
+      - 'scripts/fix-build-and-shared-ui.py'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scripts/fix-build-and-shared-ui.py
+      - name: Verify build
+        run: |
+          npm install
+          npm run build
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add App.tsx components/ControlPanel.tsx
+          git diff --cached --quiet && exit 0
+          git commit -m "fix: ControlPanel classNames so vite build succeeds"
+          git push origin HEAD:main

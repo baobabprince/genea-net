@@ -570,6 +570,7 @@ const App: React.FC = () => {
   const workerRef = useRef<Worker | null>(null);
   const [rawFileContent, setRawFileContent] = useState<string | null>(null);
   const [isAdvancedMode, setIsAdvancedMode] = useState<boolean>(false);
+  const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [isGeneratingAi, setIsGeneratingAi] = useState<boolean>(false);
 
@@ -692,6 +693,20 @@ const App: React.FC = () => {
   }, []);
 
 
+
+  // On mobile, prefer graph once data is loaded
+  useEffect(() => {
+    if (!graphData) {
+      setMobilePanelOpen(true);
+      return;
+    }
+    try {
+      if (window.matchMedia('(max-width: 767px)').matches) {
+        setMobilePanelOpen(false);
+      }
+    } catch (_) {}
+  }, [graphData]);
+
   const handleAnalyze = useCallback(() => {
     if (!graphData || !workerRef.current) return;
     setAnalysisResult(null); setIsAnalyzing(true);
@@ -771,10 +786,10 @@ const App: React.FC = () => {
 
   return (
     <div dir={language === 'he' ? 'rtl' : 'ltr'} className={`h-screen flex flex-col font-sans transition-colors duration-200 ${pageBg} overflow-hidden`}>
-      <header className={`backdrop-blur-md p-4 z-10 border-b flex-shrink-0 transition-colors duration-200 ${headerBg}`}>
+      <header className={`backdrop-blur-md p-2.5 sm:p-4 z-10 border-b flex-shrink-0 transition-colors duration-200 ${headerBg}`}>
         <div className="container mx-auto flex items-center gap-4">
-          <GraphIcon className="w-8 h-8 text-[#456352]" />
-          <h1 className="text-xl md:text-2xl font-bold tracking-tight">
+          <GraphIcon className="w-6 h-6 sm:w-8 sm:h-8 text-[#456352] flex-shrink-0" />
+          <h1 className="text-base sm:text-xl md:text-2xl font-bold tracking-tight truncate">
               {getTranslation(language, 'title')}
           </h1>
           {finalStatusMsg && <span className={`${language === 'he' ? 'mr-auto pl-3' : 'ml-auto pr-3'} text-xs text-[#456352] font-semibold animate-pulse`}>{finalStatusMsg}</span>}
@@ -828,8 +843,60 @@ const App: React.FC = () => {
           </div>
         </div>
       </header>
-      <main className="flex-grow flex flex-col md:flex-row container mx-auto p-4 gap-4 min-h-0 overflow-hidden md:overflow-visible">
-        <div className="w-full md:w-1/3 lg:w-1/4 flex-shrink-0 h-[45vh] md:h-full flex flex-col min-h-0 overflow-hidden">
+      <main className="flex-grow flex flex-col md:flex-row container mx-auto p-0 sm:p-3 md:p-4 gap-0 md:gap-4 min-h-0 overflow-hidden relative">
+        {/* Mobile: floating open-panel button */}
+        {!mobilePanelOpen && (
+          <button
+            type="button"
+            className="md:hidden fixed bottom-4 z-30 px-4 py-2.5 rounded-full shadow-lg border text-sm font-semibold flex items-center gap-2"
+            style={{
+              [language === 'he' ? 'left' : 'right']: '1rem',
+              background: theme === 'dark' ? '#1f2937' : '#fefefb',
+              borderColor: theme === 'dark' ? '#374151' : '#e7e8e0',
+              color: theme === 'dark' ? '#e5e7eb' : '#456352',
+            }}
+            onClick={() => setMobilePanelOpen(true)}
+          >
+            {language === 'he' ? 'לוח בקרה' : 'Controls'}
+          </button>
+        )}
+
+        {/* Backdrop + bottom sheet on mobile; side panel on md+ */}
+        {mobilePanelOpen && (
+          <div
+            className="md:hidden fixed inset-0 z-40 bg-black/40"
+            onClick={() => setMobilePanelOpen(false)}
+            aria-hidden
+          />
+        )}
+
+        <div
+          className={
+            (mobilePanelOpen
+              ? 'fixed inset-x-0 bottom-0 z-50 max-h-[78vh] rounded-t-2xl shadow-2xl '
+              : 'hidden ') +
+            'md:relative md:flex md:inset-auto md:bottom-auto md:z-auto md:max-h-none md:rounded-none md:shadow-none ' +
+            'w-full md:w-1/3 lg:w-1/4 flex-shrink-0 md:h-full flex flex-col min-h-0 overflow-hidden ' +
+            (theme === 'dark' ? 'bg-gray-900' : 'bg-[#f8f7f3]')
+          }
+        >
+          <div className="md:hidden flex items-center justify-between px-4 py-3 border-b flex-shrink-0" style={{ borderColor: theme === 'dark' ? '#374151' : '#e7e8e0' }}>
+            <span className="text-sm font-bold" style={{ color: theme === 'dark' ? '#e5e7eb' : '#456352' }}>
+              {language === 'he' ? 'לוח בקרה' : 'Controls'}
+            </span>
+            <button
+              type="button"
+              className="text-xs px-3 py-1.5 rounded-lg font-semibold"
+              style={{
+                background: theme === 'dark' ? '#374151' : '#edf1e9',
+                color: theme === 'dark' ? '#e5e7eb' : '#456352',
+              }}
+              onClick={() => setMobilePanelOpen(false)}
+            >
+              {language === 'he' ? 'חזרה לגרף' : 'Back to graph'}
+            </button>
+          </div>
+          <div className="flex-1 min-h-0 overflow-hidden flex flex-col p-2 md:p-0">
           <ControlPanel
             onFileSelect={handleFileSelect}
             onAnalyze={handleAnalyze}
@@ -858,8 +925,9 @@ const App: React.FC = () => {
             lang={language}
             theme={theme}
           />
+          </div>
         </div>
-        <div className={`flex-grow flex-1 rounded-lg overflow-hidden relative border transition-colors duration-250 ${canvasBgClass}`}>
+        <div className={`flex-grow flex-1 min-h-0 rounded-none md:rounded-lg overflow-hidden relative border-0 md:border transition-colors duration-250 ${canvasBgClass}`}>
           {graphData ? (
             <>
               <GraphVisualizer

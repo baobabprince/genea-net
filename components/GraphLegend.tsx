@@ -71,7 +71,7 @@ const GraphLegend: React.FC<GraphLegendProps> = ({
         : 'border-[#e7e8e0]';
 
     return (
-        <div className={`absolute top-4 ${lang === 'he' ? 'left-4' : 'right-4'} ${containerStyle} p-3 rounded-xl border z-10 transition-all duration-200`}>
+        <div className={`absolute top-2 ${lang === 'he' ? 'left-2' : 'right-2'} sm:top-4 ${lang === 'he' ? 'sm:left-4' : 'sm:right-4'} ${containerStyle} p-2 sm:p-3 rounded-lg sm:rounded-xl border z-10 transition-all duration-200 max-w-[42vw] sm:max-w-none text-[10px] sm:text-xs opacity-90 sm:opacity-100`}>
             <h4 className={`text-[10px] font-bold ${headerStyle} uppercase tracking-wider mb-2 border-b pb-1`}>
                 {t('legendTitle')}
             </h4>

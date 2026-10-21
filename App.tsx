@@ -786,13 +786,13 @@ const App: React.FC = () => {
 
   return (
     <div dir={language === 'he' ? 'rtl' : 'ltr'} className={`h-screen flex flex-col font-sans transition-colors duration-200 ${pageBg} overflow-hidden`}>
-      <header className={`backdrop-blur-md p-2.5 sm:p-4 z-10 border-b flex-shrink-0 transition-colors duration-200 ${headerBg}`}>
+      <header className={`backdrop-blur-md px-2 py-1.5 sm:p-4 z-10 border-b flex-shrink-0 transition-colors duration-200 ${headerBg}`}>
         <div className="container mx-auto flex items-center gap-4">
           <GraphIcon className="w-6 h-6 sm:w-8 sm:h-8 text-[#456352] flex-shrink-0" />
           <h1 className="text-base sm:text-xl md:text-2xl font-bold tracking-tight truncate">
               {getTranslation(language, 'title')}
           </h1>
-          {finalStatusMsg && <span className={`${language === 'he' ? 'mr-auto pl-3' : 'ml-auto pr-3'} text-xs text-[#456352] font-semibold animate-pulse`}>{finalStatusMsg}</span>}
+          {finalStatusMsg && <span className={`${language === 'he' ? 'mr-auto pl-3' : 'ml-auto pr-3'} text-xs text-[#456352] font-semibold animate-pulse hidden sm:inline truncate max-w-[36vw]`}>{finalStatusMsg}</span>}
           
           <div className={`flex items-center gap-2 ${finalStatusMsg ? '' : (language === 'he' ? 'mr-auto' : 'ml-auto')}`}>
               {/* Language Switcher */}
@@ -843,7 +843,7 @@ const App: React.FC = () => {
           </div>
         </div>
       </header>
-      <main className="flex-grow flex flex-col md:flex-row container mx-auto p-0 sm:p-3 md:p-4 gap-0 md:gap-4 min-h-0 overflow-hidden relative">
+      <main className="flex-grow flex flex-col md:flex-row container mx-auto p-0 md:p-4 gap-0 md:gap-4 min-h-0 overflow-hidden relative">
         {/* Mobile: floating open-panel button */}
         {!mobilePanelOpen && (
           <button
@@ -873,7 +873,7 @@ const App: React.FC = () => {
         <div
           className={
             (mobilePanelOpen
-              ? 'fixed inset-x-0 bottom-0 z-50 max-h-[78vh] rounded-t-2xl shadow-2xl '
+              ? 'fixed inset-x-0 bottom-0 z-50 max-h-[65vh] rounded-t-2xl shadow-2xl '
               : 'hidden ') +
             'md:relative md:flex md:inset-auto md:bottom-auto md:z-auto md:max-h-none md:rounded-none md:shadow-none ' +
             'w-full md:w-1/3 lg:w-1/4 flex-shrink-0 md:h-full flex flex-col min-h-0 overflow-hidden ' +
@@ -941,13 +941,16 @@ const App: React.FC = () => {
                 analysisResult={analysisResult}
                 theme={theme}
               />
-              <GraphLegend 
-                isGedcom={isGedcom} 
-                isAdvancedMode={isAdvancedMode} 
-                hasCommunities={!!analysisResult?.communities} 
-                lang={language}
-                theme={theme}
-              />
+              {/* Legend hidden on phones — frees graph space */}
+              <div className="hidden sm:block">
+                <GraphLegend 
+                  isGedcom={isGedcom} 
+                  isAdvancedMode={isAdvancedMode} 
+                  hasCommunities={!!analysisResult?.communities} 
+                  lang={language}
+                  theme={theme}
+                />
+              </div>
             </>
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-center p-8">

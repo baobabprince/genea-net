@@ -52,3 +52,9 @@ html.baobab-light body {
   background: #e3d3bd;
   color: var(--text);
 }
+
+/* Mobile graph-first denser controls */
+@media (max-width: 767px) {
+  .cp-root { font-size: 12px; }
+  .cp-root .space-y-8 { gap: 1rem; }
+}

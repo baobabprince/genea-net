@@ -422,7 +422,13 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                                     const size = analysisResult.largestComponentSize;
                                     const total = analysisResult.nodeCount || 1;
                                     const pct = ((size / total) * 100).toFixed(1);
-                                    return `${size.toLocaleString()} (${pct}%)`;
+                                    // Return React element so formatStatValue does not strip the percentage
+                                    return (
+                                        <span>
+                                            {size.toLocaleString()}{" "}
+                                            <span className="opacity-80 font-semibold">({pct}%)</span>
+                                        </span>
+                                    );
                                 })()}
                                 tooltip={t('largestComponentTooltip')}
                                 highlight

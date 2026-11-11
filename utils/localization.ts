@@ -47,7 +47,7 @@ export const translations = {
     identifiedCommunities: 'קהילות שזוהו',
 
     // Section 2: Topology & Distance
-    topologyTitle: '2. טופולוגיה וממנה',
+    topologyTitle: '2. טופולוגיה ומבנה',
     diameter: 'קוטר (Diameter)',
     diameterTooltip: 'המרחק המקסימלי בין שני צמתים ברשת.',
     radius: 'רדיוס (Radius)',

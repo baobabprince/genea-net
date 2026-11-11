@@ -1,4 +1,3 @@
-
 import React, { useMemo, useRef, useState, useLayoutEffect } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
 import { GraphData, NodeObject, LinkObject, AnalysisResult } from '../types';
@@ -102,8 +101,8 @@ const GraphVisualizer: React.FC<GraphVisualizerProps> = ({
         return theme === 'dark' ? `rgba(100, 116, 139, 0.04)` : `rgba(100, 116, 139, 0.03)`;
     }
     
-    // Normal opacity
-    return `rgba(${baseColor}, ${link.type === 'marriage' ? '0.85' : '0.45'})`;
+    // Normal opacity – parent-child slightly more visible for directionality
+    return `rgba(${baseColor}, ${link.type === 'marriage' ? '0.85' : link.type === 'parent-child' ? '0.55' : '0.45'})`;
   };
   
   const getNodeColor = (node: NodeObject) => {
@@ -142,6 +141,21 @@ const GraphVisualizer: React.FC<GraphVisualizerProps> = ({
       return 4; // Dates/Sources smaller
   }
 
+  // Directional arrows: larger & more visible for parent-child so direction is clear even when zoomed out
+  const getLinkDirectionalArrowLength = (link: LinkObject) => {
+    if (link.type === 'parent-child') {
+      // Bigger arrows for parent→child so they remain readable at moderate zoom-out
+      return highlightLinks.has(link) ? 7 : 5.5;
+    }
+    // No arrows for marriage / event links (undirected or different semantics)
+    return 0;
+  };
+
+  const getLinkDirectionalArrowRelPos = (link: LinkObject) => {
+    // Place arrow closer to the child (target) end for clearer parent→child reading
+    return link.type === 'parent-child' ? 0.92 : 1;
+  };
+
   return (
     <div ref={containerRef} className="w-full h-full cursor-pointer">
       <ForceGraph2D
@@ -153,7 +167,15 @@ const GraphVisualizer: React.FC<GraphVisualizerProps> = ({
         nodeVal={getNodeVal}
         nodeColor={getNodeColor}
         linkColor={getLinkColor}
-        linkWidth={(link: LinkObject) => highlightLinks.has(link) ? (link.type === 'marriage' ? 2.8 : 2.2) : 1}
+        linkWidth={(link: LinkObject) => {
+          if (highlightLinks.has(link)) {
+            return link.type === 'marriage' ? 2.8 : 2.2;
+          }
+          // Slightly thicker parent-child links to support the arrow visibility
+          return link.type === 'parent-child' ? 1.35 : 1;
+        }}
+        linkDirectionalArrowLength={getLinkDirectionalArrowLength}
+        linkDirectionalArrowRelPos={getLinkDirectionalArrowRelPos}
         linkDirectionalParticles={(link: LinkObject) => (highlightLinks.has(link) && link.type !== 'event_link') ? 1 : 0}
         linkDirectionalParticleWidth={2.5}
         linkDirectionalParticleColor={(link: LinkObject) => getLinkColor(link)}

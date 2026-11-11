@@ -449,7 +449,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                         )}
 
                         {analysisResult.peripheryNodes && analysisResult.peripheryNodes.length > 0 && (
-                            <div className={`pt-2 border-t ${theme === 'dark' ? 'border-gray-850' : 'border-gray-200'`}>
+                            <div className={`pt-2 border-t ${theme === 'dark' ? 'border-gray-850' : 'border-gray-200'}`}>
                                 <span className="text-[10px] text-gray-500 flex items-center gap-1 mb-1 font-bold uppercase">
                                     {t('peripheryNodes')}
                                     <Tooltip theme={theme} content={t('peripheryNodesTooltip')}>
@@ -465,7 +465,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                         )}
                         
                         {analysisResult.articulationPoints && analysisResult.articulationPoints.length > 0 && (
-                            <div className={`pt-2 border-t ${theme === 'dark' ? 'border-gray-850' : 'border-gray-200'`}>
+                            <div className={`pt-2 border-t ${theme === 'dark' ? 'border-gray-850' : 'border-gray-200'}`}>
                                 <span className="text-[10px] text-gray-500 flex items-center gap-1 mb-1 font-bold uppercase">
                                     {t('criticalNodes')}
                                     <Tooltip theme={theme} content={t('criticalNodesTooltip')}>
@@ -533,7 +533,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                             {isGeneratingAi ? t('analyzingPatterns') : t('geminiButtonText')}
                         </Button>
                         {aiSummary && (
-                            <div className={`mt-3 text-xs whitespace-pre-wrap ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'`}>
+                            <div className={`mt-3 text-xs whitespace-pre-wrap ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
                                 {aiSummary}
                             </div>
                         )}
